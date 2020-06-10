@@ -1,236 +1,203 @@
-let random = document.querySelector('#random');
-let rub = document.querySelector('#categories');
-let search = document.querySelector('#search');
-const rubsec = document.querySelector('.wrapper__rub');
-const searchs = document.querySelector('#searchs');
-const menu = document.querySelector('.menu');
+const random = document.querySelector('#random')
+const rub = document.querySelector('#categories')
+const search = document.querySelector('#search')
+const rubChoice = document.querySelector('.wrapper__rub')
+const searchInput = document.querySelector('.search-input')
+const menu = document.querySelector('.menu')
+const menuSpan = menu.querySelector('span')
+const aside = document.querySelector('.wrapper-aside')
 
+rub.addEventListener('click', () => {
+  rubChoice.style.display = 'block'
+  searchInput.style.display = ''
+})
+search.addEventListener('click', () => {
+  searchInput.style.display = 'block'
+  rubChoice.style.display = ''
+})
+random.addEventListener('click', () => {
+  rubChoice.style.display = ''
+  searchInput.style.display = ''
+})
 
-rub.addEventListener('click', function () {
-  rubsec.style.display = 'block';
-  searchs.style.display = '';
-});
-
-search.addEventListener('click', function () {
-  searchs.style.display = 'block';
-  rubsec.style.display = '';
-});
-
-random.addEventListener('click', function () {
-  searchs.style.display = '';
-  rubsec.style.display = '';
-});
-
-menu.addEventListener('click', function () {
-  const menuSpan = this.querySelector('span');
-  const aside = document.querySelector('.wrapper-aside');
-  menuSpan.classList.toggle('close');
-  let claass = menuSpan.getAttribute('class');
-  if (claass == 'close') {
-    aside.style.display = 'block';
+menu.addEventListener('click', () => {
+  menuSpan.classList.toggle('close')
+  let getClass = menuSpan.getAttribute('class')
+  if (getClass === 'close') {
+    aside.style.display = 'block'
   } else {
-    aside.style.display = '';
+    aside.style.display = ''
   }
 })
 
+// // --------------------------
 
-// --------------------------
-
-const jokes = [];
-
-(function (arrOfJokes) {
-  const objOfJokes = arrOfJokes.reduce((acc, joke) => {
-    acc[joke.id] = joke;
-    return acc;
-  }, {});
+const jokes = []
+const favJokes = Object.values(localStorage) || []
 
 
-  // Elemnts UI
-  const cards = document.querySelector('.main-cards');
-  const acards = document.querySelector('.aside-cards');
-  const form = document.forms['getJoke'];
+const form = document.forms['getJoke'];
+const cards = document.querySelector('.main-cards')
+const cardsLoad = document.querySelector('.main-cardsLoad')
+const asideCards = document.querySelector('.aside-cards')
 
-  // Events
-  fav()
-  renderAllJokes(objOfJokes);
-  form.addEventListener('submit', onFormSubmitHandler);
-  cards.addEventListener('click', onCardLike);
-  acards.addEventListener('click', onCardLike);
-
-  function fav() {
-    const keys = Object.keys(localStorage)
-    let ikeys = keys.length
-    while (ikeys--) {
-      const keysObj = JSON.parse(localStorage.getItem(keys[ikeys]))
-      createNewJoke(keysObj.id, keysObj.url, keysObj.value, keysObj.updated_at, keysObj.categories, keysObj.like);
-    }
-  }
-
-  function renderAllJokes(jokesList) {
-    Object.values(jokesList).forEach(joke => {
-      const id = document.querySelector('#_' + joke.id);
-      if (id == null) {
-        const card = ItemTemplate(joke);
-        cards.insertAdjacentElement('afterbegin', card);
-        if (joke.like == true) {
-          acards.insertAdjacentElement('afterbegin', card);
-        }
-      }
-    });
-  };
+const objOfJokes = jokes.map((joke) => {
+  joke.id = joke
+})
 
 
-  function ItemTemplate({ id, url, value, updated_at, categories, like } = {}) {
-    const card = document.createElement('div');
-    card.classList.add('card');
-    card.setAttribute('data-joke-id', id);
-    card.setAttribute('id', '_' + id);
+!function localLoad(arrOfJokes) {
+  arrOfJokes.map((joke) => {
+    const {id, url, value, created_at, categories} = JSON.parse(joke)
+    jokes.push(JSON.parse(joke))
+    createNewJoke(id, url, value, created_at, categories)
+    asideCards.insertAdjacentHTML('afterbegin', templateCard(id, url, value, created_at, categories))
+  })
+}(favJokes)
 
-    const cardId = document.createElement('div');
-    cardId.classList.add('card-id');
-    cardId.textContent = 'ID:';
+form.addEventListener('submit', onFormSubmitHandler)
+cards.addEventListener('click', onCardLike)
+asideCards.addEventListener('click', onCardLike);
 
-    const cardIdurl = document.createElement('a');
-    cardIdurl.setAttribute('href', url);
-    cardIdurl.setAttribute('target', '_blank');
-    cardIdurl.textContent = id;
+function onFormSubmitHandler(event) {
+  event.preventDefault()
 
-    const cardIdimg = document.createElement('img');
-    cardIdimg.setAttribute('src', 'img/interface.svg');
+  const radio = form.elements['main'].value
 
-    const cardText = document.createElement('div');
-    cardText.classList.add('card-text');
-    cardText.textContent = value;
-
-    const cardInfo = document.createElement('div');
-    cardInfo.classList.add('card-info');
-
-    const cardDate = document.createElement('div');
-    cardDate.classList.add('card-date');
-    cardDate.textContent = 'Last update: ';
-
-    const cardDateSpan = document.createElement('span');
-    let time = Date.parse(updated_at)
-    let timeNow = Date.parse(new Date());
-    cardDateSpan.textContent = ((timeNow - time) / (1000 * 60 * 60)).toFixed() + ' hours ago';
-
-    const cardRub = document.createElement('div');
-    cardRub.classList.add('card-rub');
-    cardRub.textContent = categories;
-
-    const cardlike = document.createElement('img');
-    cardlike.classList.add('card-like');
-    if (like == true) {
-      cardlike.setAttribute('src', 'img/heart.png');
+  if (radio === 'Random') {
+    const url = 'https://api.chucknorris.io/jokes/random'
+    fetchAsync(url)
+  } else if (radio === 'Categories') {
+    const catRub = form.elements.rub.value
+    const url = 'https://api.chucknorris.io/jokes/random?category=' + catRub
+    fetchAsync(url)
+  } else if (radio === 'Search') {
+    const searchText = form.elements['search1'].value
+    if (searchText.length < 3) {
+      alert('Ваш запрос должен содержать не менее 3х букв!')
     } else {
-      cardlike.setAttribute('src', 'img/heart1.png');
-    }
-
-    cardId.appendChild(cardIdurl);
-    cardIdurl.appendChild(cardIdimg);
-    card.appendChild(cardId);
-    card.appendChild(cardText);
-    cardInfo.appendChild(cardDate);
-    if (categories.length != 0) {
-      cardInfo.appendChild(cardRub);
-    }
-    cardDate.appendChild(cardDateSpan);
-    card.appendChild(cardInfo);
-    card.appendChild(cardlike);
-
-    return card;
-  }
-
-  function onFormSubmitHandler(e) {
-    e.preventDefault();
-
-    const radio = form.elements['main'].value;
-
-    if (radio == 'Random') {
-      var url = 'https://api.chucknorris.io/jokes/random'; fetchAsync();
-    }
-    else if (radio == 'Categories') {
-      let catrub = form.elements.rub.value
-      var url = 'https://api.chucknorris.io/jokes/random?category=' + catrub;
-      fetchAsync();
-    }
-    else if (radio == 'Search') {
-      let searchs = form.elements['search1'].value;
-      if (searchs.length < 3) {
-        alert('Введите Ваш запрос!')
-      } else {
-        var url = 'https://api.chucknorris.io/jokes/search?query=' + searchs;
-        SearchFetchAsync();
-      }
-    }
-
-    async function fetchAsync() {
-      const res = await fetch(url)
-      const data = await res.json()
-      createNewJoke(data.id, data.url, data.value, data.updated_at, data.categories);
-      renderAllJokes(objOfJokes);
-    }
-
-    async function SearchFetchAsync() {
-      const res = await fetch(url)
-      let data = await res.json()
-      const dataResult = data.result
-      for (let data of dataResult) {
-        createNewJoke(data.id, data.url, data.value, data.updated_at, data.categories);
-      }
-      renderAllJokes(objOfJokes);
-    }
-
-
-  }
-
-  function createNewJoke(id, url, value, updated_at, categories, like) {
-    const newJoke = {
-      id,
-      url,
-      value,
-      updated_at,
-      categories,
-      like: like || false
-    };
-
-    objOfJokes[newJoke.id] = newJoke;
-
-    return { ...newJoke };
-  }
-
-  function onCardLike({ target }) {
-    if (target.classList.contains('card-like')) {
-      const parent = target.closest('[data-joke-id]');
-      const id = parent.dataset.jokeId;
-      onLike(id, target, parent);
+      const url = 'https://api.chucknorris.io/jokes/search?query=' + searchText
+      fetchAsyncSearch(url)
     }
   }
-  function onLike(id, target, parent) {
-    const { like } = objOfJokes[id];
-    let imgSrc = target.closest('.card-like');
-    if (like == true) {
-      objOfJokes[id].like = false;
-      imgSrc.setAttribute('src', 'img/heart1.png')
-      deleteFavouriteJokes(parent)
-      localStorage.removeItem(objOfJokes[id].id)
+}
+
+async function fetchAsync(url) {
+  const res = await fetch(url)
+  const data = await res.json()
+  createNewJoke(data.id, data.url , data.value , data.updated_at, data.categories) 
+  cards.insertAdjacentHTML('afterbegin', templateCard(data.id, data.url , data.value , data.updated_at, data.categories))
+
+}
+async function fetchAsyncSearch(url) {
+  cards.innerHTML = ''
+  cardsLoad.innerHTML = ''
+  const res = await fetch(url)
+  const dataSearch = await res.json()
+  const data = dataSearch.result
+  let i = 0
+  let j = 25
+  lazyLoad()
+  function lazyLoad() {
+    let g = data.length > 25 ? data.length - (data.length - j) : data.length
+    for (; i<g; i++) {
+      createNewJoke(data[i].id, data[i].url , data[i].value , data[i].updated_at, data[i].categories) 
+      cards.insertAdjacentHTML('beforeend', templateCard(data[i].id, data[i].url , data[i].value , data[i].updated_at, data[i].categories))
     }
-    else if (like == false) {
-      objOfJokes[id].like = true;
-      imgSrc.setAttribute('src', 'img/heart.png');
-      renderFavouriteJokes(parent);
-      localStorage.setItem(objOfJokes[id].id, JSON.stringify(objOfJokes[id]));
+  j += 25
+  }
+  if (data.length > 25) {
+    cardsLoad.insertAdjacentHTML('afterbegin', templateLoad())
+    const lazyLoadButton = document.querySelector('.lazyLoad') || ''
+    lazyLoadButton.addEventListener('click', lazyLoad)
+  }
+}
+
+function templateCard(id, url, value, updated_at, categories) {
+  const timeJoke = Date.parse(updated_at)
+  const timeNow = Date.parse(new Date())
+  const time = ((timeNow - timeJoke) / (1000 * 60 * 60)).toFixed()
+  const isFavourite = jokes.filter(joke => joke.id === id)
+  const {like} = isFavourite[0] || ''
+  if (like) {
+    src = 'img/heart.png'
+  } else {
+    src = 'img/heart1.png'
+  }
+  const divRub = `<div class="card-rub">${categories}</div>`
+  const rub = categories.length != 0 ? divRub : ''
+  return `
+    <div class="card" data-joke-id="${id}">
+      <div class="card-id">
+        ID: 
+        <a href="${url}" target="_blank">
+          ${id}
+          <img src="img/interface.svg">
+        </a>
+      </div>
+      <div class="card-text">${value}</div>
+      <div class="card-info">
+        <div class="card-date">
+          Last update: 
+          <span>${time} hours ago</span>
+        </div>
+        ${rub}
+      </div>
+      <img class="card-like" src="${src}">
+    </div>
+  `
+}
+
+function templateLoad() {
+  return `
+    <div class="lazyLoad">
+      Загрузить ещё...
+    </div>
+  `
+}
+
+function createNewJoke(id, url, value, updated_at, categories) {
+  const newJoke = {
+    id,
+    url,
+    value,
+    updated_at,
+    categories
+  }
+
+  objOfJokes[newJoke.id] = newJoke
+}
+
+function onCardLike({target}) {
+  if (target.classList.contains('card-like')) {
+    const parents = target.closest('[data-joke-id]')
+    const id = parents.dataset.jokeId
+    const cardList = cards.querySelector(`[data-joke-id=${id}]`)
+    onLike(id, target, parents, cardList)
+  }
+}
+
+function onLike(id, target, parents, cardList) {
+  const img = target.closest('.card-like')
+  const imgSrc = img.getAttribute('src').split('/')[1]
+  if (imgSrc === 'heart1.png') {
+    img.setAttribute('src', 'img/heart.png')
+    objOfJokes[id].like = true
+    localStorage.setItem(objOfJokes[id].id, JSON.stringify(objOfJokes[id]))
+    const cloneParent = parents.cloneNode(true)
+    asideCards.insertAdjacentElement('afterbegin', cloneParent)
+
+  } else {
+    img.setAttribute('src', 'img/heart1.png')
+    objOfJokes[id].like = false
+    localStorage.removeItem(objOfJokes[id].id)
+    if (cardList !== null) {
+      const img1 = cardList.querySelector('.card-like') || ''
+      img1.setAttribute('src', 'img/heart1.png')
+    }
+    const parent = asideCards.querySelector(`[data-joke-id=${id}]`)
+    if (parent !== null){
+      parent.remove()
     }
   }
-
-  function renderFavouriteJokes(id) {
-    id.remove();
-    renderAllJokes(objOfJokes);
-
-  }
-  function deleteFavouriteJokes(id) {
-    id.remove();
-    renderAllJokes(objOfJokes);
-  }
-
-})(jokes);
+}
