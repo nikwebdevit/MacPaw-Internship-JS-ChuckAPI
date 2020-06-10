@@ -125,7 +125,7 @@ function templateCard(id, url, value, updated_at, categories) {
     src = 'img/heart1.png'
   }
   const divRub = `<div class="card-rub">${categories}</div>`
-  const rub = categories.length != 0 ? divRub : ''
+  const rub = categories.length !== 0 ? divRub : ''
   return `
     <div class="card" data-joke-id="${id}">
       <div class="card-id">
