@@ -173,7 +173,6 @@ function onCardLike({target}) {
     const parents = target.closest('[data-joke-id]')
     const id = parents.dataset.jokeId.substr(1)
     const id2 = parents.dataset.jokeId
-    console.log(id)
     const cardList = cards.querySelector(`[data-joke-id=${id2}]`)
     onLike(id, target, parents, cardList, id2)
   }
