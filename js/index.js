@@ -48,10 +48,10 @@ const objOfJokes = jokes.map((joke) => {
 
 !function localLoad(arrOfJokes) {
   arrOfJokes.map((joke) => {
-    const {id, url, value, created_at, categories} = JSON.parse(joke)
+    const {id, url, value, updated_at, categories} = JSON.parse(joke)
     jokes.push(JSON.parse(joke))
-    createNewJoke(id, url, value, created_at, categories)
-    asideCards.insertAdjacentHTML('afterbegin', templateCard(id, url, value, created_at, categories))
+    createNewJoke(id, url, value, updated_at, categories)
+    asideCards.insertAdjacentHTML('afterbegin', templateCard(id, url, value, updated_at, categories))
   })
 }(favJokes)
 
@@ -127,7 +127,7 @@ function templateCard(id, url, value, updated_at, categories) {
   const divRub = `<div class="card-rub">${categories}</div>`
   const rub = categories.length !== 0 ? divRub : ''
   return `
-    <div class="card" data-joke-id="${id}">
+    <div class="card" data-joke-id="_${id}">
       <div class="card-id">
         ID: 
         <a href="${url}" target="_blank">
@@ -171,13 +171,15 @@ function createNewJoke(id, url, value, updated_at, categories) {
 function onCardLike({target}) {
   if (target.classList.contains('card-like')) {
     const parents = target.closest('[data-joke-id]')
-    const id = parents.dataset.jokeId
-    const cardList = cards.querySelector(`[data-joke-id=${id}]`)
-    onLike(id, target, parents, cardList)
+    const id = parents.dataset.jokeId.substr(1)
+    const id2 = parents.dataset.jokeId
+    console.log(id)
+    const cardList = cards.querySelector(`[data-joke-id=${id2}]`)
+    onLike(id, target, parents, cardList, id2)
   }
 }
 
-function onLike(id, target, parents, cardList) {
+function onLike(id, target, parents, cardList, id2) {
   const img = target.closest('.card-like')
   const imgSrc = img.getAttribute('src').split('/')[1]
   if (imgSrc === 'heart1.png') {
@@ -195,7 +197,7 @@ function onLike(id, target, parents, cardList) {
       const img1 = cardList.querySelector('.card-like') || ''
       img1.setAttribute('src', 'img/heart1.png')
     }
-    const parent = asideCards.querySelector(`[data-joke-id=${id}]`)
+    const parent = asideCards.querySelector(`[data-joke-id=${id2}]`)
     if (parent !== null){
       parent.remove()
     }
