@@ -33,8 +33,7 @@ menu.addEventListener('click', () => {
 // // --------------------------
 
 const jokes = []
-const favJokes = Object.values(localStorage) || []
-
+const favJokes = JSON.parse(localStorage.getItem('Chuck API')) || []
 
 const form = document.forms['getJoke'];
 const cards = document.querySelector('.main-cards')
@@ -48,8 +47,8 @@ const objOfJokes = jokes.map((joke) => {
 
 !function localLoad(arrOfJokes) {
   arrOfJokes.map((joke) => {
-    const {id, url, value, updated_at, categories} = JSON.parse(joke)
-    jokes.push(JSON.parse(joke))
+    const {id, url, value, updated_at, categories} = joke
+    jokes.push(joke)
     createNewJoke(id, url, value, updated_at, categories)
     asideCards.insertAdjacentHTML('afterbegin', templateCard(id, url, value, updated_at, categories))
   })
@@ -184,14 +183,22 @@ function onLike(id, target, parents, cardList, id2) {
   if (imgSrc === 'heart1.png') {
     img.setAttribute('src', 'img/heart.png')
     objOfJokes[id].like = true
-    localStorage.setItem(objOfJokes[id].id, JSON.stringify(objOfJokes[id]))
+    const localStore = JSON.parse(localStorage.getItem('Chuck API')) || []
+    localStore.push(objOfJokes[id])
+    localStorage.setItem('Chuck API', JSON.stringify(localStore))
     const cloneParent = parents.cloneNode(true)
     asideCards.insertAdjacentElement('afterbegin', cloneParent)
 
   } else {
     img.setAttribute('src', 'img/heart1.png')
     objOfJokes[id].like = false
-    localStorage.removeItem(objOfJokes[id].id)
+    const removefavJokes = JSON.parse(localStorage.getItem('Chuck API'))
+    for (let i = 0; i < removefavJokes.length; i++){
+      if (removefavJokes[i].id === id) {
+        removefavJokes.splice(i, 1)
+        localStorage.setItem('Chuck API', JSON.stringify(removefavJokes))
+      }
+    }
     if (cardList !== null) {
       const img1 = cardList.querySelector('.card-like') || ''
       img1.setAttribute('src', 'img/heart1.png')
